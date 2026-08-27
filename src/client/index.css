@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --color-bg: #09090b;
+  --color-bg1: #101014;
+  --color-bg2: #16161c;
+  --color-bg3: #1c1c24;
+  --color-line: #ffffff10;
+  --color-text: #eceae4;
+  --color-muted: #8b8b96;
+  --color-accent: #e2b57a;
+  --color-accent2: #c4894a;
+  --color-ok: #7dcea0;
+  --color-warn: #e7b56a;
+  --color-bad: #e07a6a;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+body {
+  background: var(--color-bg);
+}
+
+select {
+  color: inherit;
+}
+
+.split-x {
+  width: 4px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: transparent;
+}
+.split-x:hover,
+.split-x:active {
+  background: #e2b57a55;
+}
+.split-y {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: row-resize;
+  z-index: 2;
+}
+.split-y:hover,
+.split-y:active {
+  background: #e2b57a55;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a32 transparent;
+}
+
+textarea:focus,
+input:focus,
+select:focus,
+button:focus-visible {
+  outline: 1px solid #e2b57a55;
+  outline-offset: 1px;
+}
+
+.prose-chat pre {
+  background: #0c0c10;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.prose-chat p {
+  margin: 0.4em 0;
+}
+
+.prose-chat code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: #ffffff0c;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+.think summary {
+  cursor: pointer;
+  list-style: none;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.think summary::-webkit-details-marker {
+  display: none;
+}
+.think-body {
+  margin-top: 6px;
+  max-height: 10rem;
+  overflow: auto;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-muted);
+  white-space: pre-wrap;
+  opacity: 0.88;
+}
+.think-live {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.think-live::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  animation: think-dot 1.4s ease-in-out infinite;
+}
+@keyframes think-dot {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
