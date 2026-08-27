@@ -1,8 +1,14 @@
 # Integration examples
 
-See also: [README — Usage Examples](../README.md#usage-examples) and [Usage](usage.md).
+See also: [README](../README.md) (stills + the SaaS `fetch` snippet) · [Usage](usage.md).
 
 The hub listens on **localhost**. Remote users cannot reach your keys unless they already have access to that machine. Your app’s job is to *instruct* people to run Local AI plus a vendor CLI, then talk to `127.0.0.1`.
+
+**Flow:** SaaS page in the browser → `http://127.0.0.1:5173` → Local AI hub → vendor CLI (Claude, Copilot, …).
+
+The copy-paste browser example lives at the top of the [README](../README.md#saas-integration-the-whole-idea). Below are streaming WebSocket, sidecar, and Python variants.
+
+## Web app (same machine as the user)
 
 ## Web app (same machine as the user)
 

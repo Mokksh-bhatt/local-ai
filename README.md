@@ -2,13 +2,76 @@
 
 A local hub that lets your apps talk to AI coding CLIs you already have — Cursor, Claude Code, GitHub Copilot, Codex, and Aider — so **you** pay the provider, not the app.
 
+**Docs (start here):** [Usage](docs/usage.md) · [SaaS / app integration](docs/integration-examples.md) · [Overview](docs/overview.md) · [Install](docs/installation.md) · [FAQ](docs/faq.md)
+
+![Workbench — one UI over the CLIs you already signed into](docs/images/workbench.png)
+
+<p align="center"><sub>One workbench: workspace, chat, agent/model, approvals, Changed / Memory.</sub></p>
+
+![SaaS in the browser → 127.0.0.1 → Local AI hub → vendor CLI](docs/images/byok.png)
+
+<p align="center"><sub>Your page stays in the browser. Tokens stay on the user’s CLI account.</sub></p>
+
+## Who is this for?
+
+- **Indie SaaS** — ship an “AI coding” feature without putting Anthropic/OpenAI keys (or the invoice) on your servers. Each customer runs Local AI and uses their own CLI login.
+- **Internal tools** — wiki bots, PR helpers, ticket drafts on engineer laptops, billed to existing Copilot or Claude seats.
+- **Script hackers** — `curl` / Node against localhost when you already live in the terminal and don’t want another API SDK.
+
+This is a **localhost bridge**, not a hosted model and not a prettier `claude` prompt. If you only want a TUI, use the vendor CLI directly.
+
 ## Overview
 
 Local AI is a small workbench that runs on your machine (`http://127.0.0.1:5173`). It does not call Anthropic, OpenAI, or GitHub APIs itself. It starts the official CLI for the agent you pick, using the login and keys already on your computer.
 
 That is the point: **bring your own account (BYOK)**. Apps stay out of the token bill. Prompts and code stay on your machine. You keep the same subscriptions you use in the terminal.
 
-More detail: [docs/overview.md](docs/overview.md).
+More detail: [docs/overview.md](docs/overview.md). Protocol and request shapes: [docs/usage.md](docs/usage.md).
+
+## SaaS integration (the whole idea)
+
+Your web app stays in the **browser**. It never sees the user’s API key. On *their* PC:
+
+```
+SaaS page  →  http://127.0.0.1:5173/api/prompt  →  Local AI hub  →  claude / copilot / … CLI
+```
+
+```html
+<button id="ask">Ask my local Claude</button>
+<pre id="out"></pre>
+<script>
+  // This fetch goes to the USER'S machine, not to your cloud.
+  document.getElementById("ask").onclick = async () => {
+    const out = document.getElementById("out");
+    out.textContent = "Talking to Local AI…";
+    try {
+      const status = await fetch("http://127.0.0.1:5173/api/status").then((r) => r.json());
+      const claude = status.adapters.find((a) => a.id === "claude");
+      if (!claude?.bin) {
+        out.textContent = "Install Claude Code, then open Local AI and click Install / Sign in.";
+        return;
+      }
+      const r = await fetch("http://127.0.0.1:5173/api/prompt", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          adapterId: "claude",
+          text: "Summarize the current git diff in 3 bullets.",
+          mode: "ask",
+          permission: "auto",
+          workspace: status.workspace,
+        }),
+      });
+      const body = await r.json();
+      out.textContent = body.error || body.text;
+    } catch {
+      out.textContent = "Local AI is not running. On this computer: npm run dev (or your installer), then retry.";
+    }
+  };
+</script>
+```
+
+If `fetch` fails, the hub is down — tell the user to start Local AI. Do not silently fall back to *your* paid API. Full patterns (WebSocket streaming, sidecars, Python): [docs/integration-examples.md](docs/integration-examples.md).
 
 ## Features
 
@@ -25,8 +88,8 @@ More detail: [docs/overview.md](docs/overview.md).
 You need **Node.js 22.18 or newer** (this repo uses Node’s built-in TypeScript type-stripping). Git is useful for the Changed panel.
 
 ```bash
-git clone <this-repo-url>
-cd "Local AI API"
+git clone https://github.com/Mokksh-bhatt/local-ai.git
+cd local-ai
 npm install
 ```
 
@@ -51,17 +114,15 @@ npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:5173](http://127.0.0.1:5173).
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). Step-by-step UI + HTTP/WebSocket: [docs/usage.md](docs/usage.md).
 
 1. Pick a workspace folder (the project the agent may edit).
 2. Pick an agent. If it is not installed, click **Open site**, install, then **I’ve done this**.
 3. If you are signed out, finish the vendor sign-in window, then refresh.
 4. Type a prompt and send.
 
-Sanity check the parsers without starting the UI:
-
 ```bash
-npm run check
+npm test
 ```
 
 Change the port if 5173 is taken:
@@ -89,21 +150,13 @@ That runs:
 
 CI runs the same `npm test` on GitHub Actions (Node 22 and 24) for every push and pull request. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
-## Usage Examples
+## More examples
 
-**SaaS app (no shared API bill).** Your product tells each user: “Install Local AI and your coding CLI.” The browser or desktop helper talks to `127.0.0.1` on *their* machine. You never hold their keys and you never pay per token.
-
-**Internal tool.** A company wiki or ticket bot sends prompts to the hub WebSocket. Engineers use the Claude or Copilot account they already have. Cost stays on existing seats.
-
-**CLI / script.** `GET /api/status` to see which CLIs are present, then `POST /api/prompt` or send JSON over `/hub`. Same hub, no extra daemon.
-
-Copy-paste samples (hub already running):
+Runnable copies (hub already running):
 
 - [examples/node-basic](examples/node-basic) — Node `fetch` one prompt
-- [examples/web-backend](examples/web-backend) — tiny localhost sidecar (Express/Flask-shaped)
+- [examples/web-backend](examples/web-backend) — tiny localhost sidecar
 - [examples/cli](examples/cli) — curl / PowerShell
-
-Protocol details: [docs/usage.md](docs/usage.md). App wiring: [docs/integration-examples.md](docs/integration-examples.md). How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Configuration
 
@@ -126,7 +179,7 @@ The UI stores pane sizes in `localStorage` (`lai.left`, `lai.right`, `lai.compos
 - Smoother first-run: install-from-site and sign-in prompts (in the UI now)
 - No Gemini (removed on purpose)
 
-Stuck? [docs/faq.md](docs/faq.md).
+Stuck? [docs/faq.md](docs/faq.md). How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

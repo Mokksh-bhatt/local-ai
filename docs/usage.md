@@ -1,6 +1,6 @@
 # Usage
 
-See also: [README — Quickstart](../README.md#quickstart) and [Usage Examples](../README.md#usage-examples).
+See also: [README](../README.md) · [SaaS / app integration](integration-examples.md) · [Quickstart](../README.md#quickstart).
 
 Assume the hub is running: `npm run dev` → `http://127.0.0.1:5173`.
 
